@@ -1,0 +1,143 @@
+---
+title: "Basic Data Analysis of the TootGrowth data"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Summary
+
+The objective of this project is to analyze the ToothGrowth data in the R datasets packagem, including testing 
+hypothesis about the relationships between the variables. 
+
+# Data Processing
+
+```{r}
+# Loading the data and packages
+library(lattice)
+library(datasets)
+data(ToothGrowth)
+
+# Attaching the data
+attach(ToothGrowth)
+```
+
+To see how the data is distributed and what are the variables, it was used head(), str() and unique() functions
+
+```{r}
+# Inspectioning the data
+head(ToothGrowth)
+str(ToothGrowth)
+unique(ToothGrowth$dose)
+```
+
+To facilitate the manipulation of the dose and supp variables, both were converted to factors 
+
+```{r}
+dose_f <- factor(dose, levels = c(0.5, 1, 2), 
+                 labels = c("0.5 mg/day","1 mg/day","2 mg/day"))
+supp_f <- factor(ToothGrowth$supp, levels = c("OJ", "VC"), 
+                 labels = c("Orange Juice","Vitamine C"))
+```
+
+# Exploratory Analysis
+
+## Summaries
+
+It was made a summary of the mean, variance and standard deviation for Growth in length by concentracion of the supplement 
+
+```{r}
+summary_conc <- data.frame("Mean" = tapply(ToothGrowth$len, dose_f, mean), 
+                           "Variance"=tapply(ToothGrowth$len, dose_f, var), 
+                           "SD" = tapply(ToothGrowth$len, dose_f, sd))
+print(summary_conc)
+```
+
+It was made a summary of the mean, variance and standard deviation for Growth in length by type 
+of the supplement
+
+```{r}
+summary_conc <- data.frame("Mean" = tapply(ToothGrowth$len, dose_f, mean), 
+                           "Variance"  = tapply(ToothGrowth$len, dose_f, var), 
+                           "SD" = tapply(ToothGrowth$len, dose_f, sd))
+print(summary_conc)
+```
+
+## Plots
+
+It was made a boxplot of the Growth in length by concentracion of the supplement  
+
+```{r}
+bwplot(len~dose_f, 
+   ylab="Length", xlab="Concentration of Supplement",
+   main="Growth per Concentration of Supplementt")
+```
+
+It was made a boxplot of the Growth in length by type of the supplement
+
+```{r}
+bwplot(len~supp_f, 
+   ylab="Length", xlab="Type of Supplement",
+   main="Growth in Length by Type of Supplement")
+```
+
+It was made a boxplot of the Growth in length by both concentration and type of the supplement
+
+```{r}
+bwplot(len~supp_f|dose_f, 
+   ylab="Length", xlab="Type of Supplement",
+   main="Growth in Length by both Concentration and Type of Supplement", layout=c(3,1))
+```
+
+# Hypothesis Testing
+
+## Hypothesis Testing for the difference in Growth in Length by the type of supplement
+
+H0 = There is no difference in Growth in Length by type of supplement
+H1 = There is a difference in Growth in Length by type of supplement
+
+```{r}
+# Testing 
+t.test(formula = len ~ supp_f, paired = FALSE, data = ToothGrowth)
+```
+
+As the p-value is more than 0.05, we conclude that with a 95% confidence, there is no difference in Growth in Length by type of supplement   
+
+## Hypothesis Testing for the difference in Growth in Length by the concentration of supplement
+
+Although, it could be tested the differences in length between each pair of concentration of supplement,
+the plots previously made suggest that the differen between the 0.5 and 2.0 concentration is great enough 
+that is not necessary in this case, so it would be tested only the differences between the other 2 pairs. 
+
+_ Hypotthesis Testing for the difference in Growth in length between the 0.5 and 1.0 concentrations
+
+H0 = There is no difference in Growth in Length between the 0.5 and 1.0 concentrations
+H1 = There is a difference in Growth in Length between the 0.5 and 1.0 concentrations
+
+```{r}
+diff_0.5_1.0 <- subset(ToothGrowth, dose %in% c(0.5, 1.0))
+t.test(len ~ dose, paired = F, var.equal = F, data = diff_0.5_1.0)
+```
+
+As the p-value is less than 0.05, it can not be refused the null hypothesis, se we conclude that with a 95% confidence, there is a difference in Growth in Length between the 0.5 and 1.0 concentrations of the supplement
+
+_ Hypotthesis Testing for the difference in Growth in length between the 0.5 and 1.0 concentrations
+
+H0 = There is no difference in Growth in Length between the 1.0 and 2.0 concentrations
+H1 = There is a difference in Growth in Length between the 1.0 and 2.0 concentrations
+
+```{r}
+diff_1.0_2.0 <- subset(ToothGrowth, dose %in% c(1.0, 2.0))
+t.test(len ~ dose, paired = F, var.equal = F, data = diff_1.0_2.0)
+```
+
+As the p-value is less than 0.05, it can not be refused the null hypothesis, se we conclude that with a 95% confidence, there is a difference in Growth in Length between the 1.0 and 2.0 concentrations of the supplement  
+
+# Conclusion
+
+_ The growth in length is associated with an increased concentration of the supplement, however the
+type of supplement does not seem to produce a significant difference in the length.
+
